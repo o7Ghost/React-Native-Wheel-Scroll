@@ -1,8 +1,14 @@
 import React from "react";
 import { View, StyleSheet, Text, Dimensions } from "react-native";
+import Animated, { useAnimatedGestureHandler } from "react-native-reanimated";
+
+import { VISIBLE_ITEMS, ITEM_HEIGHT } from "./Constants";
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from "react-native-gesture-handler";
 
 const { width } = Dimensions.get("window");
-import { VISIBLE_ITEMS, ITEM_HEIGHT } from "./Constants";
 
 interface PickerProps {
   defaultValue: number;
@@ -29,15 +35,28 @@ const styles = StyleSheet.create({
 });
 
 const Picker = ({ values, defaultValue }: PickerProps) => {
+  const PanGestureEvent =
+    useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
+      onStart: () => {},
+      onActive: (event) => {
+        console.log(event.translationX);
+      },
+      onEnd: () => {},
+    });
+
   return (
     <View style={styles.container}>
-      {values.map((v, i) => {
-        return (
-          <View key={v.value}>
-            <Text style={styles.label}>{v.label}</Text>
-          </View>
-        );
-      })}
+      <PanGestureHandler onGestureEvent={PanGestureEvent}>
+        <Animated.View style={{ flex: 1, flexDirection: "row" }}>
+          {values.map((v, i) => {
+            return (
+              <View key={v.value}>
+                <Text style={styles.label}>{v.label}</Text>
+              </View>
+            );
+          })}
+        </Animated.View>
+      </PanGestureHandler>
     </View>
   );
 };
