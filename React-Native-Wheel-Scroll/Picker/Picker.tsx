@@ -1,6 +1,13 @@
 import React from "react";
 import { View, StyleSheet, Text, Dimensions } from "react-native";
-import Animated, { useAnimatedGestureHandler } from "react-native-reanimated";
+import Animated, {
+  cancelAnimation,
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  withDecay,
+} from "react-native-reanimated";
 
 import { VISIBLE_ITEMS, ITEM_HEIGHT } from "./Constants";
 import {
@@ -31,18 +38,44 @@ const styles = StyleSheet.create({
     lineHeight: ITEM_HEIGHT,
     textAlign: "center",
     textAlignVertical: "center",
+    padding: 4,
+    width: 200,
   },
 });
 
+type ContextType = {
+  x: number;
+};
+
 const Picker = ({ values, defaultValue }: PickerProps) => {
-  const PanGestureEvent =
-    useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
-      onStart: () => {},
-      onActive: (event) => {
-        console.log(event.translationX);
-      },
-      onEnd: () => {},
-    });
+  const translationX = useSharedValue(0);
+
+  const clampedTranslatedX = useDerivedValue(() => {
+    console.log(translationX.value);
+    return Math.max(Math.min(translationX.value, 0), -width);
+  });
+
+  const PanGestureEvent = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    ContextType
+  >({
+    onStart: (_, context) => {
+      context.x = clampedTranslatedX.value;
+      cancelAnimation(translationX);
+    },
+    onActive: (event, context) => {
+      translationX.value = event.translationX + context.x;
+    },
+    onEnd: (event) => {
+      translationX.value = withDecay({ velocity: event.velocityX });
+    },
+  });
+
+  const itemStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: clampedTranslatedX.value }],
+    };
+  });
 
   return (
     <View style={styles.container}>
@@ -50,9 +83,9 @@ const Picker = ({ values, defaultValue }: PickerProps) => {
         <Animated.View style={{ flex: 1, flexDirection: "row" }}>
           {values.map((v, i) => {
             return (
-              <View key={v.value}>
+              <Animated.View style={[itemStyle]} key={v.value}>
                 <Text style={styles.label}>{v.label}</Text>
-              </View>
+              </Animated.View>
             );
           })}
         </Animated.View>

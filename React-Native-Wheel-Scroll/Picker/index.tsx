@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const start = 1900;
+const start = 2020;
 
 const values = new Array(new Date().getFullYear() - start + 1)
   .fill(0)
