@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const start = 2020;
+const start = 2022;
 
 const values = new Array(new Date().getFullYear() - start + 1)
   .fill(0)
@@ -27,7 +27,7 @@ const values = new Array(new Date().getFullYear() - start + 1)
   .reverse();
 
 const HorizontalPicker = () => {
-  const defaultValue = 1990 - start;
+  const defaultValue = 2021;
   return (
     <View style={styles.container}>
       <Text style={styles.title}>What year were you born?</Text>

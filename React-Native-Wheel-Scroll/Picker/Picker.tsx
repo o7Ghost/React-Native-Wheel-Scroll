@@ -2,11 +2,13 @@ import React from "react";
 import { View, StyleSheet, Text, Dimensions } from "react-native";
 import Animated, {
   cancelAnimation,
+  Easing,
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
   withDecay,
+  withTiming,
 } from "react-native-reanimated";
 
 import { VISIBLE_ITEMS, ITEM_HEIGHT } from "./Constants";
@@ -39,7 +41,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     textAlignVertical: "center",
     padding: 4,
-    width: 200,
+    width: 80,
   },
 });
 
@@ -49,10 +51,10 @@ type ContextType = {
 
 const Picker = ({ values, defaultValue }: PickerProps) => {
   const translationX = useSharedValue(0);
+  const swipped = useSharedValue(false);
 
   const clampedTranslatedX = useDerivedValue(() => {
-    console.log(translationX.value);
-    return Math.max(Math.min(translationX.value, 0), -width);
+    return Math.max(Math.min(translationX.value, 0), -width * 5);
   });
 
   const PanGestureEvent = useAnimatedGestureHandler<
@@ -60,20 +62,38 @@ const Picker = ({ values, defaultValue }: PickerProps) => {
     ContextType
   >({
     onStart: (_, context) => {
-      context.x = clampedTranslatedX.value;
-      cancelAnimation(translationX);
+      context.x = translationX.value;
+      // cancelAnimation(translationX);
+      // translationX.value = 0;
+      swipped.value = true;
     },
     onActive: (event, context) => {
-      translationX.value = event.translationX + context.x;
+      if (swipped.value) {
+        if (event.translationX >= 0) {
+          translationX.value += 80;
+        } else {
+          translationX.value -= 80;
+        }
+      }
+      console.log(swipped.value);
+      swipped.value = false;
     },
-    onEnd: (event) => {
-      translationX.value = withDecay({ velocity: event.velocityX });
-    },
+    // onEnd: (event) => {
+    //   translationX.value = withDecay({ velocity: event.velocityX });
+    // },
   });
 
+  console.log(translationX.value);
   const itemStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: clampedTranslatedX.value }],
+      transform: [
+        {
+          translateX: withTiming(translationX.value, {
+            duration: 500,
+            easing: Easing.bezier(0.16, 1, 0.3, 1),
+          }),
+        },
+      ],
     };
   });
 
